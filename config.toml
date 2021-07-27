@@ -1,0 +1,34 @@
+baseURL = "http://example.org/"
+languageCode = "en-au"
+title = "Off My Mind!"
+theme = "cactus"
+
+[params]
+  colortheme = "dark"
+  description = "This is where I get things off my mind!"
+  mainSectionTitle = "Blog"
+  tagsOverview = true
+
+[taxonomies]
+  tag = "tags"
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 1
+
+  [[menu.main]]
+    name = "All posts"
+    url = "/posts"
+    weight = 2
+
+  [[menu.main]]
+    name = "Tags"
+    url = "/tags"
+    weight = 3
+
+  [[menu.main]]
+    name = "About"
+    url = "/about"
+    weight = 4
