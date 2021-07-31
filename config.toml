@@ -11,7 +11,15 @@ theme = "cactus"
   And this is where I get things off my mind!
   """
   mainSection = "posts"
-  mainSectionTitle = "Recent posts"
+  mainSectionTitle = "Latest posts"
+
+  [[params.social]]
+    name = "github"
+    link = "https://github.com/leonseng"
+
+  [[params.social]]
+    name = "linkedin"
+    link = "https://www.linkedin.com/in/leonseng/"
 
 [menu]
   [[menu.main]]
