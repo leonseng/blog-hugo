@@ -1,11 +1,17 @@
 baseURL = "https://leonseng.netlify.app/"
 languageCode = "en-au"
-title = "Off My Mind!"
+title = "Leon Seng"
 theme = "cactus"
 
 [params]
   colortheme = "dark"
-  description = "This is where I get things off my mind!"
+  description = """
+  I glue tools together in the hidden world of backend, infrastructure & networking.
+
+  And this is where I get things off my mind!
+  """
+  mainSection = "posts"
+  mainSectionTitle = "Recent posts"
 
 [menu]
   [[menu.main]]
