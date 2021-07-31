@@ -6,7 +6,7 @@ theme = "cactus"
 [params]
   colortheme = "dark"
   description = """
-  I glue tools together in the hidden world of backend, infrastructure & networking.
+  I glue tools together in the hidden world of network infrastructure automation.
 
   And this is where I get things off my mind!
   """
