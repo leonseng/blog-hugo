@@ -5,6 +5,7 @@ theme = "cactus"
 
 [params]
   colortheme = "dark"
+  css = ["css/custom.css"]
   description = """
   I glue tools together in the hidden world of network infrastructure automation.
 
