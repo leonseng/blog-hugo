@@ -3,6 +3,7 @@ title: "Learning Terraform S3 Backend"
 date: 2021-06-11T14:52:29+10:00
 draft: false
 tags: ['aws', 's3', 'terraform']
+categories: ['tech']
 ---
 
 I have had basic experience playing with Terraform to instantiate resources in Kubernetes and AWS, but my previous attempts left me with a thought, how do I implement this at work and scale it up to the team?

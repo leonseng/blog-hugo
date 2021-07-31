@@ -3,6 +3,7 @@ title: "ELI5: Kubernetes Custom Resources"
 date: 2021-07-18T14:50:02+10:00
 draft: false
 tags: ['kubernetes', 'eli5']
+categories: ['tech']
 ---
 
 In this article, I will be using the process of building a house as an example to explain how Kubernetes [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) work.
