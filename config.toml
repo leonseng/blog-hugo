@@ -1,4 +1,4 @@
-baseURL = "https://dev.leonseng.com/"
+baseURL = "/"
 languageCode = "en-au"
 title = "Leon Seng"
 theme = "cactus"
