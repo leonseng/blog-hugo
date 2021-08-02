@@ -1,5 +1,5 @@
 ---
-title: "Learning Istio | Part 1: setting up"
+title: "Learning Istio | Part 1: Setup"
 date: 2021-08-02T14:20:35+10:00
 draft: false
 series: ["Learning Istio"]
