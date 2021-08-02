@@ -3,6 +3,38 @@ languageCode = "en-au"
 title = "Leon Seng"
 theme = "cactus"
 
+[markup]
+  [markup.tableOfContents]
+    endLevel = 3
+    ordered = false
+    startLevel = 1
+
+[menu]
+  [[menu.main]]
+    name = "Home"
+    url = "/"
+    weight = 10
+
+  [[menu.main]]
+    name = "Posts"
+    url = "/posts"
+    weight = 20
+
+  [[menu.main]]
+    name = "Categories"
+    url = "/categories"
+    weight = 30
+
+  [[menu.main]]
+    name = "Tags"
+    url = "/tags"
+    weight = 40
+
+  [[menu.main]]
+    name = "About"
+    url = "/about"
+    weight = 50
+
 [params]
   colortheme = "dark"
   css = ["css/custom.css"]
@@ -22,28 +54,7 @@ theme = "cactus"
     name = "linkedin"
     link = "https://www.linkedin.com/in/leonseng/"
 
-[menu]
-  [[menu.main]]
-    name = "Home"
-    url = "/"
-    weight = 1
-
-  [[menu.main]]
-    name = "Posts"
-    url = "/posts"
-    weight = 2
-
-  [[menu.main]]
-    name = "Categories"
-    url = "/categories"
-    weight = 3
-
-  [[menu.main]]
-    name = "Tags"
-    url = "/tags"
-    weight = 4
-
-  [[menu.main]]
-    name = "About"
-    url = "/about"
-    weight = 5
+[taxonomies]
+  category = "categories"
+  series = "series"
+  tag = "tags"
