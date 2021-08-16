@@ -1,7 +1,7 @@
 ---
 title: "Learning Istio | Accessing external TCP services using ServiceEntry"
 date: 2021-08-16T11:31:40+10:00
-draft: true
+draft: false
 series: ["Learning Istio"]
 tags: ['kubernetes', 'istio']
 categories: ['tech']
