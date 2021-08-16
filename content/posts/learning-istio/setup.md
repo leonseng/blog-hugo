@@ -191,6 +191,55 @@ docker.io/istio/proxyv2:1.10.3
 ```
 
 ---
+# Security Hardening
+
+## Mutual TLS
+
+By default, Istio configures the destination workloads using `PERMISSIVE` mode, where a service can accept both plain text and mutual TLS traffic. To ensure all our cluster traffic is encrypted, we will change this to `STRICT` mode.
+
+There are two spots to enforce this
+1. By namespace
+```
+$ kubectl apply -n <namespace> -f - <<EOF
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: "default"
+spec:
+  mtls:
+    mode: STRICT
+EOF
+```
+2. Globally - note the resource is applied in the `istio-system` namespace.
+```
+$ kubectl apply -n istio-system -f - <<EOF
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: "default"
+spec:
+  mtls:
+    mode: STRICT
+EOF
+```
+
+## Outbound Traffic Policy
+
+To ensure we have better control of traffic exiting the cluster to reach external services, we will be configuring the Istio `meshConfig.outboundTrafficPolicy.mode` option to `REGISTRY_ONLY`. This means that pods/sidecars in the cluster are only able to reach external services if they are first defined in Istio's internal service registry (via [ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/) definitions).
+
+
+Use `istioctl` to enforce the policy
+```
+istioctl install --set profile=demo -y --set meshConfig.outboundTrafficPolicy.mode=REGISTRY_ONLY
+```
+
+Verify the configuration is applied correctly
+```
+$ kubectl get istiooperator installed-state -n istio-system -o jsonpath='{.spec.meshConfig.outboundTrafficPolicy.mode}'
+REGISTRY_ONLY
+```
+
+---
 
 # Next steps
 

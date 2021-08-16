@@ -11,19 +11,6 @@ In this post, we will be testing Istio's [ServiceEntry](https://istio.io/latest/
 
 # Setup
 
-## Istio Outbound Traffic Policy
-
-Configure Istio to only allow communications to services external to the cluster
-```
-istioctl install --set profile=demo -y --set meshConfig.outboundTrafficPolicy.mode=REGISTRY_ONLY
-```
-
-Verify the configuration is applied correctly
-```
-$ kubectl get istiooperator installed-state -n istio-system -o jsonpath='{.spec.meshConfig.outboundTrafficPolicy.mode}'
-REGISTRY_ONLY
-```
-
 ## "External" PostgresDB service
 
 Since we are running the Kubernetes cluster locally in Docker containers using `k3d`, we can create an "external" service by running a `PostgresDB` Docker container on the same host and expose its ports to localhost.
