@@ -25,10 +25,28 @@ But, I'm not here to talk about use cases. Today, I just want to say I can do it
 
 I'll be testing this out with a Kubernetes cluster created with Kubespray. The secret sauce here is the [Multus](https://github.com/k8snetworkplumbingwg/multus-cni) CNI which enables attaching multiple network interfaces to pods. On top of that, I'll be using macvlan to give the pods "direct" access to the Kubernetes nodes' network interfaces so that my pods look more like routers with real interfaces.
 
-## Deploy Kubernetes cluter with Kubespray
+< insert network diagram >
 
+### Deploy Kubernetes cluster with Kubespray
 
-## Install Multus
+For deploying the Kubernetes cluster, I just followed the [Quick Start](https://github.com/kubernetes-sigs/kubespray#quick-start) guide, replacing the IPS with the IP addresses of my VMs
+```
+sudo pip3 install -r requirements.txt
+cp -rfp inventory/sample inventory/mycluster
+declare -a IPS=(10.1.1.5 10.1.1.6 10.1.1.7)
+CONFIG_FILE=inventory/mycluster/hosts.yaml python3 contrib/inventory_builder/inventory.py ${IPS[@]}
+ansible-playbook -i inventory/mycluster/hosts.yaml  --become --become-user=root cluster.yml
+```
+
+### Install Multus
+
+Once the cluster is up and running, I installed the Multus plugin following the Multus' [Installation](https://github.com/k8snetworkplumbingwg/multus-cni/blob/master/docs/quickstart.md#installation) instructions:
+```
+git clone https://github.com/k8snetworkplumbingwg/multus-cni.git && cd multus-cni
+cat ./images/multus-daemonset.yml | kubectl apply -f -
+```
+
+## Defining Network Attachments
 
 ```
 cat <<EOF | kubectl create -f -
@@ -80,6 +98,36 @@ spec:
 EOF
 ```
 
+Create deployment
+```
+kubectl create -f - <<EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: busybox
+  name: busybox
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: busybox
+  template:
+    metadata:
+      annotations:
+        k8s.v1.cni.cncf.io/networks: macvlan-internal, macvlan-external
+      labels:
+        app: busybox
+    spec:
+      containers:
+      - image: busybox:1.24
+        name: busybox
+        command: ["tail"]
+        args:
+        - "-f"
+        - "/dev/null"
+EOF
+```
 
 ## Where's my macvlan CNI plugin
 
@@ -117,29 +165,30 @@ ubuntu@ubuntu:~$
 
 Verify
 ```
-ubuntu@ubuntu:~$ k exec busybox-9d4f77bc6-fg28r -- ip a
+ubuntu@ubuntu:~$ k exec busybox-56588d745b-nk4dn -- ip a
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
        valid_lft forever preferred_lft forever
 2: tunl0@NONE: <NOARP> mtu 1480 qdisc noop qlen 1000
     link/ipip 0.0.0.0 brd 0.0.0.0
-4: eth0@if14: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1480 qdisc noqueue
-    link/ether ee:32:83:6f:64:93 brd ff:ff:ff:ff:ff:ff
-    inet 10.233.92.4/32 brd 10.233.92.4 scope global eth0
+4: eth0@if15: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1480 qdisc noqueue
+    link/ether 82:ea:54:30:dd:a5 brd ff:ff:ff:ff:ff:ff
+    inet 10.233.92.11/32 brd 10.233.92.11 scope global eth0
        valid_lft forever preferred_lft forever
 5: net1@if3: <BROADCAST,MULTICAST,UP,LOWER_UP,M-DOWN> mtu 1500 qdisc noqueue
-    link/ether 52:0d:f8:61:ce:4d brd ff:ff:ff:ff:ff:ff
-    inet 10.1.10.200/24 brd 10.1.10.255 scope global net1
+    link/ether 02:09:61:4f:15:f0 brd ff:ff:ff:ff:ff:ff
+    inet 10.1.10.203/24 brd 10.1.10.255 scope global net1
        valid_lft forever preferred_lft forever
 6: net2@eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue
-    link/ether 2a:df:58:ea:e8:f1 brd ff:ff:ff:ff:ff:ff
-    inet 10.1.20.200/24 brd 10.1.20.255 scope global net2
+    link/ether a6:3f:9f:cb:46:88 brd ff:ff:ff:ff:ff:ff
+    inet 10.1.20.203/24 brd 10.1.20.255 scope global net2
        valid_lft forever preferred_lft forever
-ubuntu@ubuntu:~$ k exec busybox-9d4f77bc6-fg28r -- ping 10.1.20.1
+ubuntu@ubuntu:~$
+ubuntu@ubuntu:~$ k exec busybox-56588d745b-nk4dn -- ping 10.1.20.1
 PING 10.1.20.1 (10.1.20.1): 56 data bytes
-64 bytes from 10.1.20.1: seq=0 ttl=64 time=2.885 ms
-64 bytes from 10.1.20.1: seq=1 ttl=64 time=0.316 ms
+64 bytes from 10.1.20.1: seq=0 ttl=64 time=0.759 ms
+64 bytes from 10.1.20.1: seq=1 ttl=64 time=0.353 ms
 ^C
 ubuntu@ubuntu:~$
 ```
