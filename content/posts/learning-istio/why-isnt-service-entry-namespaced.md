@@ -1,5 +1,5 @@
 ---
-title: "Why Isn't Service Entry Namespaced!?"
+title: "Learning Istio | Why Isn't Service Entry Namespaced!?"
 date: 2021-09-04T23:36:07+10:00
 series: ["Learning Istio"]
 tags: ['kubernetes', 'istio']
