@@ -6,7 +6,7 @@ tags: ['kubernetes', 'istio']
 categories: ['tech']
 ---
 
-I got a question on how we can restrict access to certain external endpoints on a per namespace basis. There was a proposed solution to use Istio's `egress gateway` to possibly control access to particular external endpoints, though I'm not convinced that's a valid [use case of an `egress gateway`](https://istio.io/latest/docs/tasks/traffic-management/egress/egress-gateway/#use-case) today. So off I go to do some investigation...
+I got a question on how we can restrict access to certain external endpoints on a per namespace basis. There was an idea to use Istio's `egress gateway` to control access to external endpoints, though I'm not convinced that's a valid [use case for an `egress gateway`](https://istio.io/latest/docs/tasks/traffic-management/egress/egress-gateway/#use-case) today. So off I go to do some investigation...
 
 ## A naive beginning
 
@@ -19,13 +19,13 @@ istioctl install --set profile=demo --set meshConfig.outboundTrafficPolicy.mode=
 To test the access restriction, I deployed a `debian` pod in the `default` namespace
 
 ```
-k create deployment debian --image debian --replicas=1 -- tail -f /dev/null
+kubectl create deployment debian --image debian --replicas=1 -- tail -f /dev/null
 ```
 
 and tried running `apt update`
 
 ```
-$ k exec -it debian-8484c5df49-9x7lt -- bash
+$ kubectl exec -it debian-8484c5df49-9x7lt -- bash
 Defaulting container name to debian.
 Use 'kubectl describe pod/debian-8484c5df49-9x7lt -n default' to see all of the containers in this pod.
 root@debian-8484c5df49-9x7lt:/#
@@ -57,7 +57,7 @@ As expected the command fails when `apt update` tries to reach external endpoint
 I then created a `ServiceEntry` matching the two hostnames
 
 ```
-k create -f - <<EOF
+kubectl create -f - <<EOF
 apiVersion: networking.istio.io/v1beta1
 kind: ServiceEntry
 metadata:
@@ -78,7 +78,7 @@ EOF
 and re-ran `apt update`. This time it ran successfully as expected.
 
 ```
-$ k exec -it debian-8484c5df49-9x7lt -- bash
+$ kubectl exec -it debian-8484c5df49-9x7lt -- bash
 Defaulting container name to debian.
 Use 'kubectl describe pod/debian-8484c5df49-9x7lt -n default' to see all of the containers in this pod.
 root@debian-8484c5df49-9x7lt:/# apt update
@@ -101,15 +101,15 @@ Now, I thought this would be the end of the story. All I have to do is to only a
 But I figured this came to me too easily... they should have figured it out without asking for help. So, I tried repeating the test from another namespace `newguy`
 
 ```
-k create ns newguy
+kubectl create ns newguy
 kubectl label namespace newguy istio-injection=enabled
-k -n newguy create deployment debian --image debian --replicas=1 -- tail -f /dev/null
+kubectl -n newguy create deployment debian --image debian --replicas=1 -- tail -f /dev/null
 ```
 
 Lo and behold, when I run `apt update` in this container, it worked... when I thought it shouldn't...
 
 ```
-k -n newguy exec -it debian-8484c5df49-dpf2h -- bash
+$ kubectl -n newguy exec -it debian-8484c5df49-dpf2h -- bash
 Defaulting container name to debian.
 Use 'kubectl describe pod/debian-8484c5df49-dpf2h -n newguy' to see all of the containers in this pod.
 root@debian-8484c5df49-dpf2h:/# apt update
@@ -134,12 +134,10 @@ No, not the `istio-proxy` sidecars that come with pods. I'm talking about the [S
 
 > By default, Istio will program all sidecar proxies in the mesh with the necessary configuration required to reach every workload instance in the mesh, as well as accept traffic on all the ports associated with the workload. The Sidecar configuration provides a way to fine tune the set of ports, protocols that the proxy will accept when forwarding traffic to and from the workload. In addition, it is possible to restrict the set of services that the proxy can reach when forwarding outbound traffic from workload instances.
 
-So, that means my `newguy:debian` pod by default contains configuration to get to the `*.debian.org` hosts from the `ServiceEntry` definition in the default namespace. All I have to do is to restrict the sidecar configuration for the `newguy` namespace, and not pick up the configuration from the `ServiceEntry` definition in the default namespace.
-
-The configuration below configures sidecars in `newguy` to allow egress traffic only to other workloads in the same namespace as well as to services in the `istio-system` namespace.
+So, that means by default, my `newguy:debian` pod contains configuration to get to the `*.debian.org` hosts from the `ServiceEntry` definition in the default namespace. I want the opposite of that - I don't want the `istio-proxy` in the `newguy` namespace to pick up configuration defined in other namespaces. To achieve that, I created the following `Sidecar` definition in the `newguy` namespace which only allows egress traffic only to other workloads in the same namespace as well as to services in the `istio-system` namespace.
 
 ```
-k -n newguy create -f - <<EOF
+kubectl -n newguy create -f - <<EOF
 apiVersion: networking.istio.io/v1beta1
 kind: Sidecar
 metadata:
@@ -155,7 +153,7 @@ EOF
 When I try running `apt update` in the `newguy` namespace again:
 
 ```
-$ k -n newguy exec debian-8484c5df49-dpf2h -- apt update
+$ kubectl -n newguy exec debian-8484c5df49-dpf2h -- apt update
 Defaulting container name to debian.
 Use 'kubectl describe pod/debian-8484c5df49-dpf2h -n newguy' to see all of the containers in this pod.
 
@@ -180,7 +178,7 @@ command terminated with exit code 100
 It fails as expected! And when I add the two hostnames in the egress hosts list of the `Sidecar` resource:
 
 ```
-k -n newguy apply -f - <<EOF
+kubectl -n newguy apply -f - <<EOF
 apiVersion: networking.istio.io/v1beta1
 kind: Sidecar
 metadata:
@@ -198,7 +196,7 @@ EOF
 `apt update` now runs successfully!
 
 ```
-$ k -n newguy exec debian-8484c5df49-dpf2h -- apt update
+$ kubectl -n newguy exec debian-8484c5df49-dpf2h -- apt update
 Defaulting container name to debian.
 Use 'kubectl describe pod/debian-8484c5df49-dpf2h -n newguy' to see all of the containers in this pod.
 
