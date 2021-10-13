@@ -289,7 +289,7 @@ Next, we define the following:
             mode: MUTUAL
             credentialName: nginx-mtls-external
             sni: nginx-mtls.diff-ca.local
-        ```
+    ```
 
 With all that in place, the application should now be able to access the external service that is expecting a client certificate signed with a different root CA from the cluster's CA
 ```
