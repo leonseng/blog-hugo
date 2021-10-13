@@ -1,7 +1,9 @@
 ---
-title: "Securing Egress Traffic With mTLS"
+title: "Learning Istio | Securing Egress Traffic With mTLS"
 date: 2021-10-12T15:59:45+11:00
-draft: false
+series: ["Learning Istio"]
+tags: ['kubernetes', 'istio']
+categories: ['tech']
 ---
 
 There are times when applications deployed in Kubernetes need to communicate with external services that requires mTLS authentication, where the applications have to present client certificates signed by a common root/intermediate CA when accessing the service. This can lead to unpleasant scenarios where
