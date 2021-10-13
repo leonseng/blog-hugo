@@ -131,19 +131,19 @@ All packages are up to date.
 root@debian-8484c5df49-dpf2h:/#
 ```
 
+Turns out that by default, many of Istio's resources are translated to configurations which are applied to the sidecar proxies in all namespaces. Here's one from Istio's [ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/) documentation:
+
+> The 'exportTo' field allows for control over the visibility of a service declaration to other namespaces in the mesh. By default, a service is exported to all namespaces.
+
+So, that means by default, my `newguy:debian` pod contains configuration to get to the `*.debian.org` hosts from the `ServiceEntry` definition in the default namespace. I want the opposite of that - I don't want the `istio-proxy` in the `newguy` namespace to pick up configuration defined in other namespaces.
+
 Now that we've established our problem, let's set out to explore the options:
 1. [Specifying which namespaces can access certain hosts defined in the `ServiceEntry`](#exportto)
 1. [Specifying which endpoints can be accessed from a namespace](#sidecar-resource)
 
 ## exportTo
 
-The most direct way is to use the `exportTo` attribute in `ServiceEntry` to specify the namespaces in which pods are allowed to access the external endpoints. From Istio's [ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/) documentation:
-
-> The 'exportTo' field allows for control over the visibility of a service declaration to other namespaces in the mesh. By default, a service is exported to all namespaces.
-
-So, that means by default, my `newguy:debian` pod contains configuration to get to the `*.debian.org` hosts from the `ServiceEntry` definition in the default namespace. I want the opposite of that - I don't want the `istio-proxy` in the `newguy` namespace to pick up configuration defined in other namespaces.
-
-To achieve that, I updated the `ServiceEntry` to only export to the namespace in which it's defined:
+The most direct way is to use the `exportTo` attribute in `ServiceEntry` to specify the namespaces in which pods are allowed to access the external endpoints. To achieve that, I updated the `ServiceEntry` to only export to the namespace in which it's defined, or just `"."`:
 ```
 kubectl apply -f - <<EOF
 apiVersion: networking.istio.io/v1beta1
