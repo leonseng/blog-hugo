@@ -15,8 +15,6 @@ As an application owner, I would prefer to just deal with plain ol' HTTP on port
 1. [Istio cluster has the same root CA as the external service](#common-ca)
 1. [Istio cluster has a different root CA from the external service](#different-ca)
 
----
-
 # Common CA
 
 Many enterprises have root CAs they use to sign and verify all internal services. To ensure compliance, a good practice is to create an intermediate CA from the root CA, and plug that into the cluster when deploying Istio, as detailed [here](https://istio.io/latest/docs/tasks/security/cert-management/plugin-ca-cert/). For such scenarios, Istio supports [TLS origination for egress traffic](https://istio.io/latest/docs/tasks/traffic-management/egress/egress-tls-origination/#tls-origination-for-egress-traffic), and we can enable mTLS by setting the TLS mode in the `DestinationRule` to `ISTIO_MUTUAL` as documented [here](https://istio.io/latest/docs/reference/config/networking/destination-rule/#ClientTLSSettings). This tells the sidecar proxy to use a client certificate generated automatically by Istio (signed using the intermediate CA, hence the enterprise root CA) when calling the external service for mTLS authentication.
@@ -27,6 +25,7 @@ To demonstrate this, I have deployed an external service `nginx-mtls.common-ca.l
 
 I deployed a `curl` pod to mimic an application performing a `GET` request to the external service:
 ```
+kubectl apply -f - <<EOF
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,10 +50,12 @@ spec:
         - /dev/null
         image: curlimages/curl
         name: curl
+EOF
 ```
 
 As Istio's `outboundTrafficPolicy` is set to `REGISTRY_ONLY`, a `ServiceEntry` is required to allow any applications in the cluster to reach the external service `nginx-mtls.common-ca.local`:
 ```
+kubectl apply -f - <<EOF
 apiVersion: networking.istio.io/v1beta1
 kind: ServiceEntry
 metadata:
@@ -70,6 +71,7 @@ spec:
   resolution: STATIC
   endpoints:
   - address: 10.1.1.4
+EOF
 ```
 
 As it is, the application is expected to supply the client certificate for the mTLS connection. Attempting to call the external service without the client certificate would result in a failed request:
@@ -84,6 +86,7 @@ To enable mTLS, we need the following resources:
 
 1. A `DestinationRule` to initiate the mTLS connection on port `80`
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1alpha3
     kind: DestinationRule
     metadata:
@@ -96,9 +99,11 @@ To enable mTLS, we need the following resources:
             number: 80
           tls:
             mode: ISTIO_MUTUAL
+    EOF
     ```
 1. Update the `ServiceEntry` with a new port entry for the HTTP port `80`, and a `targetPort` attribute set to the HTTPS port `8443`:
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1beta1
     kind: ServiceEntry
     metadata:
@@ -118,6 +123,7 @@ To enable mTLS, we need the following resources:
       resolution: STATIC
       endpoints:
       - address: 10.1.1.4
+    EOF
     ```
 
 The application will now be able to target the HTTP endpoint, leaving it to Istio to set up the mTLS connection on its behalf towards the external service:
@@ -128,8 +134,6 @@ $ kubectl exec curl-5fd94f6d69-526vq -c curl -- \
   | grep title
 <title>Welcome to nginx!</title>
 ```
-
----
 
 # Different CA
 
@@ -149,6 +153,7 @@ We first need to handle the connection between the application and the egress ga
 
 1. A `Gateway` on the egress gateway to listen for traffic to the external service (on port 443 because of the mTLS connection between the application and the egress gateway)
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1alpha3
     kind: Gateway
     metadata:
@@ -165,9 +170,11 @@ We first need to handle the connection between the application and the egress ga
         - nginx-mtls.diff-ca.local
         tls:
             mode: ISTIO_MUTUAL
+    EOF
     ```
 1. A `VirtualService` to direct traffic to the external service via the egress gateway
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService
     metadata:
@@ -188,9 +195,11 @@ We first need to handle the connection between the application and the egress ga
             subset: nginx-mtls
             port:
               number: 443
+    EOF
     ```
 1. A `DestinationRule` to perform mTLS origination from application to the egress gateway, whilst preserving the SNI string towards the external service `nginx-mtls.diff-ca.local`
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1alpha3
     kind: DestinationRule
     metadata:
@@ -206,13 +215,15 @@ We first need to handle the connection between the application and the egress ga
             tls:
               mode: ISTIO_MUTUAL
               sni: nginx-mtls.diff-ca.local
+    EOF
     ```
 
 
 For the second half of the connection, we need the egress gateway to route the traffic to the external service over an mTLS connection. First, we create a generic `Secret` to store the enterprise root CA, client certificate and key:
 
+> Note that I've created the `Secret` in the `istio-system` because that's where my egress gateway is deployed
 ```
-kubectl create secret generic nginx-mtls-external \
+kubectl -n istio-system create secret generic nginx-mtls-external \
   --from-file=tls.key=client.key \
   --from-file=tls.crt=client.crt \
   --from-file=ca.crt=enterpriseRootCA.pem
@@ -222,6 +233,7 @@ Next, we define the following:
 
 1. A `ServiceEntry` for the external service to allow traffic to leave the cluster
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1beta1
     kind: ServiceEntry
     metadata:
@@ -237,9 +249,11 @@ Next, we define the following:
       resolution: STATIC
       endpoints:
       - address: 10.1.1.4
+    EOF
     ```
 1. Update the `VirtualService` defined earlier to redirect traffic hitting the egress gateway to now leave the cluster towards the external service (note the new `HTTPMatchRequest`)
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService
     metadata:
@@ -270,9 +284,12 @@ Next, we define the following:
             host: nginx-mtls.diff-ca.local
             port:
               number: 9443
+    EOF
     ```
 1. A `DestinationRule` for the external service, with the client TLS mode set to `MUTUAL` for mTLS. The `Secret` containing the certificates and key is also referenced here to provide Istio sidecars with right files for setting up the mTLS connection.
+    > Note that I've defined the `DestinationRule` in the same namespace as where the `Secret` is defined in this example
     ```
+    kubectl -n istio-system apply -f - <<EOF
     apiVersion: networking.istio.io/v1alpha3
     kind: DestinationRule
     metadata:
@@ -289,6 +306,7 @@ Next, we define the following:
             mode: MUTUAL
             credentialName: nginx-mtls-external
             sni: nginx-mtls.diff-ca.local
+    EOF
     ```
 
 With all that in place, the application should now be able to access the external service that is expecting a client certificate signed with a different root CA from the cluster's CA
@@ -308,6 +326,7 @@ First, the cluster admin has to define the following:
 
 1. A `ServiceEntry` for the external service to allow traffic to leave the cluster
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1beta1
     kind: ServiceEntry
     metadata:
@@ -323,9 +342,11 @@ First, the cluster admin has to define the following:
       resolution: STATIC
       endpoints:
       - address: 10.1.1.4
+    EOF
     ```
 1. A `VirtualService` to route traffic destined for the external service, and converting the HTTP port (`80`) to the HTTPS port (`9443`). Note that this is just a port number change, the protocol is still HTTP at this point.
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1alpha3
     kind: VirtualService
     metadata:
@@ -341,9 +362,11 @@ First, the cluster admin has to define the following:
             host: nginx-mtls.diff-ca.local
             port:
               number: 9443
+    EOF
     ```
 1. A `DestinationRule` to perform mTLS connection, referencing the CA certificate, client certificate and key files in particular locations in the sidecar proxy. These files will be loaded into the sidecar proxy by the application owners in the following section.
     ```
+    kubectl apply -f - <<EOF
     apiVersion: networking.istio.io/v1alpha3
     kind: DestinationRule
     metadata:
@@ -359,6 +382,7 @@ First, the cluster admin has to define the following:
             clientCertificate: /etc/certs/tls.crt
             privateKey: /etc/certs/tls.key
             caCertificates: /etc/certs/ca.crt
+    EOF
     ```
 
 With the above set up, the application owners then have to provide the CA certificate, client certificate and key files for their applications:
@@ -379,6 +403,7 @@ With the above set up, the application owners then have to provide the CA certif
    The `Deployment` manifest will look something like this:
 
     ```
+    kubectl apply -f - <<EOF
     apiVersion: apps/v1
     kind: Deployment
     metadata:
@@ -406,6 +431,7 @@ With the above set up, the application owners then have to provide the CA certif
             - /dev/null
             image: curlimages/curl
             name: curl
+    EOF
     ```
 
     You can verify that the certificates and key are mounted correctly using `istioctl pc secrets`
