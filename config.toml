@@ -45,6 +45,7 @@ theme = "cactus"
   """
   mainSection = "posts"
   mainSectionTitle = "Latest posts"
+  tocInline = true
 
   [[params.social]]
     name = "github"
