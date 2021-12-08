@@ -65,7 +65,7 @@ spec:
 
 The diagram below shows how an application is deployed with Argo CD:
 
-![Basic Argo CD workflow](/static/images/argocd-basic.png)
+![Basic Argo CD workflow](/images/argocd-basic.png)
 
 1. User creates/modifies and uploads Kubernetes resource manifests (e.g. Deployment, ConfigMap, Service etc) for an application into a Git repository.
 1. (**manual step in cluster**) User deploys an `Application` CR.
@@ -81,7 +81,7 @@ The previous workflow still involves a manual step on the cluster - creating the
 
 Remember that an `Application` CR just points the agent to where the Kubernetes resource manifests are, there's no limitation on what kind of resources it supports. Naturally, this can be extended to other `Application` CRs! Here's how it works:
 
-![Argo CD app of apps workflow](/static/images/argocd-app-of-apps.png)
+![Argo CD app of apps workflow](/images/argocd-app-of-apps.png)
 
 Let's start with the <span style="color:red">**red**</span> flow that shows the bootstrapping:
 1. User creates a bootstrap Git repository to store `Application` CRs for the actual applications we want to deploy.
