@@ -8,11 +8,11 @@ categories: ['tech']
 
 I've been thinking of moving my Kubernetes lab into the cloud, but running them 24x7 the way I'm used to is a sure-fire way to exceed the allocated budget. With IT department clamping down on cloud resource usage, I set off to find a solution that would give a good balance between cost and convenience.
 
-In this post, I go through setting up an ephemeral Kubernetes cluster, complete with Kubernetes resources/applications deployed in it through [Infrastructure as Code (IaC)](#infrastructure-as-code-with-terraform) and [GitOps](#k8s-resource-management-via-argo-cd) practices. You can follow along the post by cross referencing the code found here:
+In this post, I go through setting up an ephemeral Kubernetes cluster, complete with Kubernetes resources/applications deployed in it using [Infrastructure as Code (IaC)](#infrastructure-as-code-using-terraform) and [GitOps](#k8s-resource-management-via-gitops-using-argo-cd) practices. You can follow along the post by cross referencing the code found here:
 
 > [https://github.com/leonseng/terraform-everything/tree/master/eks-gitops](https://github.com/leonseng/terraform-everything/tree/master/eks-gitops)
 
-# Infrastructure as Code with Terraform
+# Infrastructure as Code using Terraform
 
 Starting with the Kubernetes cluster, I went with [EKS](https://aws.amazon.com/eks/) as I am most familiar with AWS amongst the public cloud service providers. Using a managed Kubernetes offering makes sense for me as my current focus is on Kubernetes applications.
 
@@ -22,13 +22,11 @@ An EKS cluster has a lot of dependencies such as VPC, gateways, security policie
 
 > [https://github.com/leonseng/terraform-everything/blob/master/eks-gitops/eks.tf](https://github.com/leonseng/terraform-everything/blob/master/eks-gitops/eks.tf)
 
-# K8s resource management via Argo CD
+# K8s resource management via GitOps using Argo CD
 
-With the cluster sorted, we turn our attention the deploying Kubernetes resources/applications in the cluster. It's instinctive to start running `kubectl` commands to deploy resources in the cluster, but it makes keeping track of them difficult as time goes on. If the cluster is to be rebuilt on a regular basis, we'd best hope we have a record of what's deployed in it, ideally in a Git repository where our IaC definitions are also stored.
+With the cluster sorted, we turn our attention the deploying Kubernetes resources/applications in the cluster. It's instinctive to start running `kubectl` commands to deploy resources in the cluster, but it makes keeping track of them difficult as time goes on. If the cluster is to be rebuilt on a regular basis, we'd best hope we have a record of what's deployed in it, ideally in a Git repository where our IaC definitions are also stored. Voila! We now have the desired state of applications safely stored in Git.
 
-## GitOps primer
-
-GitOps can be briefly described as an automated workflow that ensures the state of the cluster matches the source of truth, or Git repositories in the case. State reconciliation via GitOps can be done in one of two patterns:
+But how do we then apply this desired state to our cluster? This is where GitOps comes in. GitOps can be briefly described as an automated workflow that ensures the state of the cluster matches the source of truth, or Git repositories in the case. State reconciliation via GitOps can be done in one of two patterns:
 
 1. Changes are **pushed** to the cluster
 
@@ -40,9 +38,7 @@ GitOps can be briefly described as an automated workflow that ensures the state 
 
 For this article, I will be using Argo CD, mainly for its explicit support for the [App of Apps pattern](#the-one-app-to-rule-them-all) which I will cover in a section further down.
 
-## Argo CD
-
-### Application Custom Resource
+## Argo CD Applications
 
 In Argo CD, Kubernetes applications are defined via [`Application` custom resources (CR)](https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#applications). An `Application` CR provides Argo CD with the following information:
 
@@ -79,7 +75,7 @@ The diagram below shows how an application is deployed with Argo CD:
 
 And just like that, our application deployment has been turned into code. Pretty cool! But we can do better...
 
-### The One App To Rule Them All
+## The One App To Rule Them All
 
 The previous workflow still involves a manual step on the cluster - creating the `Application` CR in the cluster. If the user forgets or makes a mistake, the state of the cluster will not reflect the desired state defined in the Git repository. In order to deal with such scenarios, let's turn to the [App of Apps pattern](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/#app-of-apps-pattern).
 
@@ -103,7 +99,7 @@ Once the cluster has been bootstrapped, let's go through the <span style="color:
 
 Phew... that was a lot to take in 😅. Hopefully we are now in the right head space to move on to the next section where we automate the bootstrapping via Terraform.
 
-## Setting up GitOps Terraform
+## Terraforming GitOps
 
 To integrate this GitOps workflow and the App of Apps pattern with the [IaC](#infrastructure-as-code-with-terraform) definitions, we use Terraform to:
 
