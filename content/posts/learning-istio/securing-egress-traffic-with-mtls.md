@@ -23,7 +23,7 @@ Many enterprises have root CAs they use to sign and verify all internal services
 
 To demonstrate this, I have deployed an external service `nginx-mtls.common-ca.local:8443` using an NGINX container running on a remote host `10.1.1.4`. mTLS authentication is enabled by configuring it to perform client SSL verification. The root CA specified for client SSL verification is also used to generated the server certificate for the NGINX server.
 
-> See [leonseng/nginx-mtls](https://github.com/leonseng/nginx-mtls) for more information on the external service
+> See [nginx-mtls](https://github.com/leonseng/nginx-everything/tree/master/nginx-mtls) for more information on the external service
 
 I deployed a `curl` pod to mimic an application performing a `GET` request to the external service:
 ```
