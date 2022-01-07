@@ -6,6 +6,8 @@ tags: ['kubernetes', 'eli5']
 categories: ['tech']
 ---
 
+---
+
 In this article, I will be using the process of building a house as an example to explain how Kubernetes [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/) work.
 
 ---

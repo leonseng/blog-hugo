@@ -6,6 +6,8 @@ tags: ['aws', 'kubernetes', 'eks', 'terraform', 'iac', 'argocd', 'gitops']
 categories: ['tech']
 ---
 
+---
+
 I've been thinking of moving my Kubernetes lab into the cloud, but with cloud resource usage being scrutinized by the IT department, running them 24x7 the way I'm used to is a no-go. I need a setup that meets the following requirements:
 
 - Simple to create and tear down

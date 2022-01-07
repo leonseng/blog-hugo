@@ -6,6 +6,8 @@ tags: ['kubernetes', 'istio']
 categories: ['tech']
 ---
 
+---
+
 There are times when applications deployed in Kubernetes need to communicate with external services that requires mTLS authentication, where the applications have to present client certificates signed by a common root/intermediate CA when accessing the service. This can lead to unpleasant scenarios where
 
 1. application owners have to keep track of certificates for each of their applications

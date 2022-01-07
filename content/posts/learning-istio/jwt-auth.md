@@ -7,6 +7,8 @@ tags: ['kubernetes', 'istio', 'jwt']
 categories: ['tech']
 ---
 
+---
+
 In this post, we will be looking at how Istio handles end user authentication/authorization based on JSON Web Tokens (JWT). JWT is commonly used in OAuth2.0 flows to specify the resources a client has access to, but there are a couple of things to verify before the client is given access:
 
 1. Is the JWT issued by the right party

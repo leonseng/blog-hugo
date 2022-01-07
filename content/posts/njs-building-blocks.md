@@ -5,6 +5,8 @@ tags: ['nginx', 'njs']
 categories: ['tech']
 ---
 
+---
+
 [NGINX Javascript (njs)](https://nginx.org/en/docs/njs/) provides a powerful and modern extension to configure NGINX. Looking at the list of [use cases](https://www.nginx.com/blog/harnessing-power-convenience-of-javascript-for-each-request-with-nginx-javascript-module/#Use-Cases-for-the-NGINX-JavaScript-Module) left me bedazzled, but also very confused on how njs was used to achieve those use cases. So here another post of me learning about the building blocks provided by njs. Hopefully we will have a better frame of mind to understand how the njs is utilized in those use cases by the end of this post.
 
 All the source code referenced in this post can be found here:

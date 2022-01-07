@@ -7,6 +7,8 @@ tags: ['kubernetes', 'istio']
 categories: ['tech']
 ---
 
+---
+
 In this post, we will be testing Istio's [ServiceEntry](https://istio.io/latest/docs/reference/config/networking/service-entry/) by accessing a PostgreDB database hosted externally from the Kubernetes cluster.
 
 # Setup

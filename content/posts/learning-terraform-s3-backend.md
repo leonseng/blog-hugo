@@ -6,6 +6,8 @@ tags: ['aws', 's3', 'terraform']
 categories: ['tech']
 ---
 
+---
+
 I have had basic experience playing with Terraform to instantiate resources in Kubernetes and AWS, but my previous attempts left me with a thought, how do I implement this at work and scale it up to the team?
 
 Terraform creates a local state file which seems like a pain to share around a team. This is when I found out about remote backends. And this is my attempt to learn [Terraform S3 backend](https://www.terraform.io/docs/language/settings/backends/s3.html).

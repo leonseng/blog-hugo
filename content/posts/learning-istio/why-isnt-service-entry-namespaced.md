@@ -6,6 +6,8 @@ tags: ['kubernetes', 'istio']
 categories: ['tech']
 ---
 
+---
+
 I got a question on how we can restrict access to certain external endpoints on a per namespace basis. There was an idea to use Istio's `egress gateway` to control access to external endpoints, though I'm not convinced that's a valid [use case for an `egress gateway`](https://istio.io/latest/docs/tasks/traffic-management/egress/egress-gateway/#use-case) today. So I went off to do some investigation, and found some options:
 
 1. [Specifying which namespaces can access certain hosts defined in the `ServiceEntry`](#exportto)
