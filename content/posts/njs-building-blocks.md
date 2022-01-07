@@ -115,6 +115,8 @@ The reason we don't see the entries from [r.log()](https://nginx.org/en/docs/njs
 
 ## Making subrequests
 
+### request.subrequest
+
 njs supports making additional requests while handling an existing request using the [r.subrequest()](https://nginx.org/en/docs/njs/reference.html#r_subrequest). This can be handy for situations such as getting NGINX to perform HTTP requests or API calls to multiple endpoints on the client's behalf, and building a response based on the responses from each of the subrequests, simplifying the client side logic.
 
 Here's an example where NGINX performs a subrequest to an external endpoint [worldtimeapi.org](http://worldtimeapi.org), parses the JSON response from the subrequest to retrieve the value of the `datetime` field, and returns it to the client.
@@ -195,7 +197,7 @@ A couple things to note:
     > 0.6.2
     > ```
 
-## Making subrequests - part 2
+### ngx.fetch
 
 There is another function [ngx.fetch()](http://nginx.org/en/docs/njs/reference.html#ngx_fetch) that allows you to make sideband calls:
 ```javascript
