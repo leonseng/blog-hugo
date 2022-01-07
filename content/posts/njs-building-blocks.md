@@ -1,13 +1,13 @@
 ---
-title: "NGINX | njs building blocks"
+title: "NGINX Javascript building blocks"
 date: 2022-01-05T16:21:56+11:00
 tags: ['nginx', 'njs']
 categories: ['tech']
 ---
 
-[NGINX Javascript (njs)](https://nginx.org/en/docs/njs/) provides a powerful and modern extension to configure NGINX. Looking at the list of [use cases](https://www.nginx.com/blog/harnessing-power-convenience-of-javascript-for-each-request-with-nginx-javascript-module/#Use-Cases-for-the-NGINX-JavaScript-Module) left me bedazzled, and very confused at how njs was actually used to achieve those use cases.
+[NGINX Javascript (njs)](https://nginx.org/en/docs/njs/) provides a powerful and modern extension to configure NGINX. Looking at the list of [use cases](https://www.nginx.com/blog/harnessing-power-convenience-of-javascript-for-each-request-with-nginx-javascript-module/#Use-Cases-for-the-NGINX-JavaScript-Module) left me bedazzled, but also very confused on how njs was used to achieve those use cases. So here another post of me learning about the building blocks provided by njs. Hopefully we will have a better frame of mind to understand how the njs is utilized in those use cases by the end of this post.
 
-So here another post of me learning about the building blocks provided by njs, hopefully giving me a better context to understand how the documented use cases utilize njs. All the source code referenced in this post can be found here:
+All the source code referenced in this post can be found here:
 
 > [https://github.com/leonseng/nginx-everything/tree/master/nginx-javascript](https://github.com/leonseng/nginx-everything/tree/master/nginx-javascript)
 
@@ -16,16 +16,14 @@ So here another post of me learning about the building blocks provided by njs, h
 
 The njs module package needs to be installed per instructions [here](https://nginx.org/en/docs/njs/install.html). Alternatively, just use the [nginx Docker image](https://hub.docker.com/_/nginx) which has the njs package included, albeit slightly outdated (v0.6.2 as of the day this post was written).
 
-To use njs, load the module and specify where the njs files are with the [js_path](https://nginx.org/en/docs/http/ngx_http_js_module.html#js_path) and [js_import](https://nginx.org/en/docs/http/ngx_http_js_module.html#js_import) directives:
+To use njs in your NGINX configuration, load the module and specify where the njs files are with the [js_path](https://nginx.org/en/docs/http/ngx_http_js_module.html#js_path) and [js_import](https://nginx.org/en/docs/http/ngx_http_js_module.html#js_import) directives:
 ```nginx
 # nginx.conf
 load_module modules/ngx_http_js_module.so;
-...
 
 http {
   js_path "/etc/nginx/njs/";
   js_import main from main.js;
-  ...
 }
 ```
 
@@ -85,7 +83,7 @@ $ curl -H "Accept: application/json" localhost/hello
 
 ## Logging in njs
 
-Logging in njs can be done via the following functions:
+Logging in njs is provided by the following functions:
 - [r.log()](https://nginx.org/en/docs/njs/reference.html#r_log) - on `info` level
 - [r.error()](https://nginx.org/en/docs/njs/reference.html#r_error) - on `error` level
 - [r.warn()](https://nginx.org/en/docs/njs/reference.html#r_warn) - on `warning` level
@@ -103,7 +101,7 @@ function hello(r) {
 
 When the `hello` function is invoked, notice that only the string passed to [r.error()](https://nginx.org/en/docs/njs/reference.html#r_error) shows up in `stderr`:
 ```console
-$ curl localhost
+$ curl localhost/hello
 Hello world
 
 $ docker logs njs
@@ -112,16 +110,14 @@ $ docker logs njs
 ...
 ```
 
-The reason we don't see the entries from [r.log()](https://nginx.org/en/docs/njs/reference.html#r_log) and [r.warn()](https://nginx.org/en/docs/njs/reference.html#r_warn) is because the njs logging functions write to the **error log**, and by default, NGINX only logs `error` level entries to the error log, as defined by the [error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log) directive. This means that only [r.error()](https://nginx.org/en/docs/njs/reference.html#r_error) can be used for njs logging unless the error_log directive is modified in `nginx.conf`.
+The reason we don't see the entries from [r.log()](https://nginx.org/en/docs/njs/reference.html#r_log) and [r.warn()](https://nginx.org/en/docs/njs/reference.html#r_warn) is because the njs logging functions write to the **error log**, and by default, NGINX only logs `error` level entries to the error log, as defined by the [error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log) directive. This means that only [r.error()](https://nginx.org/en/docs/njs/reference.html#r_error) can be used for njs logging unless the [error_log](http://nginx.org/en/docs/ngx_core_module.html#error_log) directive is modified in `nginx.conf`.
 
 
-## Making sideband calls
-
-### request.subrequest
+## Making subrequests
 
 njs supports making additional requests while handling an existing request using the [r.subrequest()](https://nginx.org/en/docs/njs/reference.html#r_subrequest). This can be handy for situations such as getting NGINX to perform HTTP requests or API calls to multiple endpoints on the client's behalf, and building a response based on the responses from each of the subrequests, simplifying the client side logic.
 
-Here's an example where NGINX performs a subrequest to an external endpoint [worldtimeapi.org](http://worldtimeapi.org), parses the JSON response from the subrequest to retrieve the value of datetime, and returns it to the client.
+Here's an example where NGINX performs a subrequest to an external endpoint [worldtimeapi.org](http://worldtimeapi.org), parses the JSON response from the subrequest to retrieve the value of the `datetime` field, and returns it to the client.
 ```nginx
 # nginx.conf
 http {
@@ -199,7 +195,7 @@ A couple things to note:
     > 0.6.2
     > ```
 
-### ngx.fetch
+## Making subrequests - part 2
 
 There is another function [ngx.fetch()](http://nginx.org/en/docs/njs/reference.html#ngx_fetch) that allows you to make sideband calls:
 ```javascript
@@ -223,7 +219,7 @@ So how do we choose between [r.subrequest()](https://nginx.org/en/docs/njs/refer
 
     [ngx.fetch()](http://nginx.org/en/docs/njs/reference.html#ngx_fetch) on the other hand is designed for making HTTP requests on behalf on `stream` traffic which don't have an existing HTTP connection, meaning it needs to create a new HTTP connection for the request.
 
-1. [r.subrequest()](https://nginx.org/en/docs/njs/reference.html#r_subrequest) shares its input/request headers with the client request, whereas [ngx.fetch()](http://nginx.org/en/docs/njs/reference.html#ngx_fetch) doesn't.
+1. [r.subrequest()](https://nginx.org/en/docs/njs/reference.html#r_subrequest) shares its input/request headers with the client request (but can be modified with the [proxy_set_header](http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_set_header) directive), whereas [ngx.fetch()](http://nginx.org/en/docs/njs/reference.html#ngx_fetch) doesn't.
 
 
 
@@ -275,7 +271,7 @@ function modify_response_header(r) {
 
 > Note that in `main.modify_response_header`, the `Content-Length` header is deleted to enforce chunked transfer encoding.
 >
-> This is required as the length of the response body changed when the new field `njs` was added in `main.modify_response_body`, and I couldn't figure out how to retrieve the new content-length in the `main.modify_response_header` function. `js_header_filter` is called before `js_body_filter`, regardless of how they are ordered in the `nginx.conf`.
+> This is required as the length of the response body changed when the new field `njs` was added in `main.modify_response_body`, and I couldn't figure out how to retrieve the new content-length in the `main.modify_response_header` function. `js_header_filter` is always called before `js_body_filter`, regardless of how they are ordered in the `nginx.conf`.
 >
 > Another one for the **"too hard, maybe someday"** pile.
 
@@ -386,7 +382,7 @@ $ docker logs njs
 
 njs can perform complex evaluation of variables in `nginx.conf` with the [js_set](https://nginx.org/en/docs/http/ngx_http_js_module.html#js_set) directive.
 
-In the example below, we use `js_set` to declare a variable `hashed_req_id` which has its value derived from the njs function `main.hash_req_id`. The variable `hashed_req_id` can then be referenced within `nginx.conf`, in this case as a response body for the location `/hash-req-id`:
+In the example below, we use [js_set](https://nginx.org/en/docs/http/ngx_http_js_module.html#js_set) to declare a variable `$hashed_req_id`, which has its value derived from the njs function `main.hash_req_id` each time it is evaluated. In this case, `main.hash_req_id` is called each time a response body is formed for the location `/hash-req-id`:
 ```nginx
 # nginx.conf
 http {
