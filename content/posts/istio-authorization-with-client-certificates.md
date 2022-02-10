@@ -6,6 +6,8 @@ tags: ['kubernetes', 'istio', 'mtls', 'auth', 'spiffe']
 categories: ['tech']
 ---
 
+---
+
 Istio has inbuilt capabilities to perform authentication/authorization against external requests using JWT, as explored in a previous [post](/posts/learning-istio/jwt-auth/), but not everyone uses JWT. So here's an idea of performing authentication/authorization for external requests with just the client certificates presented in the mTLS handshake.
 
 **tl;dr**:
