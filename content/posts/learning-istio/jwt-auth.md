@@ -3,7 +3,7 @@ title: "Learning Istio | JWT Auth"
 date: 2021-11-06T21:32:16+11:00
 draft: false
 series: ["Learning Istio"]
-tags: ['kubernetes', 'istio', 'jwt']
+tags: ['kubernetes', 'istio', 'jwt', 'auth']
 categories: ['tech']
 ---
 
