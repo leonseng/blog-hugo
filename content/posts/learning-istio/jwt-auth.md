@@ -230,7 +230,7 @@ spec:
     - key: request.auth.claims[aud]
       values: ["httpbin"]
     - key: request.auth.claims[scope]
-      values: ["write:database, fetch:email"]
+      values: ["write:database", "fetch:email"]
 EOF
 ```
 
@@ -361,4 +361,239 @@ Here's a list of things that were picked up during my tests that weren't immedia
 1. To assist with troubleshooting, set the log level for the `jwt` and `rbac` loggers to `debug`, which will produce more logs on JWT validation and RBAC enforcement in the application sidecar proxy.
     ```sh
     istioctl proxy-config log $(k get pods -l app=httpbin -o jsonpath='{.items[*].metadata.name}') --level jwt:debug rbac:debug
+    ```
+
+    Example logs:
+    ```
+    2022-02-26T12:22:59.367876Z     debug   envoy jwt       Called Filter : setDecoderFilterCallbacks
+    2022-02-26T12:22:59.368028Z     debug   envoy jwt       Called Filter : decodeHeaders
+    2022-02-26T12:22:59.368043Z     debug   envoy jwt       Prefix requirement '/' matched.
+    2022-02-26T12:22:59.368056Z     debug   envoy jwt       extract authorizationBearer
+    2022-02-26T12:22:59.368076Z     debug   envoy jwt       origins-0: JWT authentication starts (allow_failed=false), tokens size=1
+    2022-02-26T12:22:59.368080Z     debug   envoy jwt       origins-0: startVerify: tokens size 1
+    2022-02-26T12:22:59.368084Z     debug   envoy jwt       origins-0: Parse Jwt eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6InF2OXhiNWg5T1l5LXVKZ1Z5REV5eCJ9.eyJodHRwczovL2Zvby5jb20vZ3JvdXBzIjoiYWRtaW4gc3VwZXJ1c2VyIGRiLWFkbWluIiwiaXNzIjoiaHR0cHM6Ly9sZW9uc2VuZy5hdS5hdXRoMC5jb20vIiwic3ViIjoiUVdQand2bVZUTFZKaVFlamNQSmltMENLUjNweHRnZDNAY2xpZW50cyIsImF1ZCI6ImlzdGlvLWp3dC10ZXN0IiwiaWF0IjoxNjQ1ODc4MTQ1LCJleHAiOjE2NDU5NjQ1NDUsImF6cCI6IlFXUGp3dm1WVExWSmlRZWpjUEppbTBDS1IzcHh0Z2QzIiwic2NvcGUiOiJyZWFkOmRhdGFiYXNlIHdyaXRlOmRhdGFiYXNlIGV4dHJhIiwiZ3R5IjoiY2xpZW50LWNyZWRlbnRpYWxzIn0.NXfsGWfFU2YOCByAXdsBVArcynOy4uNX4V9MZ9WaaXWh6n3h1rx5njZyAq0_EqCEPOkAc3Omi6i-eF12LzPoJfGqBkndc2uW5OGVDOFSpWtBMkKAUUQI8mXvsqToywASyvwssjMe-8tEhyZfQbIZEN0LxyuIL6uUABGrzk857tDghedcDetKxmkJ3sBplf1XmGDaGnez6TDuccq19UbKVBlerGKotIO5pyTMV2zsakGQCFBhP7ruOLTK7cf6xeEh18ZGbgVcoYJWaZE-VGJnqUwnjBghVhqQy3qqHUBXqFMVOc2lxHXb8mdGs7QkcMQ5bYggpQ1FRd8WQUHbANRfDQ
+    2022-02-26T12:22:59.368203Z     debug   envoy jwt       origins-0: Verifying JWT token of issuer https://leonseng.au.auth0.com/
+    2022-02-26T12:22:59.368295Z     debug   envoy jwt       origins-0: JWT token verification completed with: OK
+    2022-02-26T12:22:59.368307Z     debug   envoy jwt       Jwt authentication completed with: OK
+    2022-02-26T12:22:59.368826Z     debug   envoy rbac      checking request: requestedServerName: outbound_.8000_._.httpbin.foo.svc.cluster.local, sourceIP: 10.233.92.126:41388, directRemoteIP: 10.233.92.126:41388, remoteIP: 10.233.90.0:0,localAddress: 10.233.90.9:80, ssl: uriSanPeerCertificate: spiffe://cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account, dnsSanPeerCertificate: , subjectPeerCertificate: , headers: ':authority', 'httpbin.example.com'
+    ':path', '/headers'
+    ':method', 'GET'
+    'user-agent', 'curl/7.68.0'
+    'accept', '*/*'
+    'x-forwarded-for', '10.233.90.0'
+    'x-forwarded-proto', 'http'
+    'x-request-id', '728e9bfa-8cc8-4207-98b3-d941eb3d35ac'
+    'x-envoy-attempt-count', '1'
+    'x-b3-traceid', '71234a0f0c636e6c6427deb5863af105'
+    'x-b3-spanid', '6427deb5863af105'
+    'x-b3-sampled', '0'
+    'content-length', '0'
+    'x-envoy-internal', 'true'
+    'x-forwarded-client-cert', 'By=spiffe://cluster.local/ns/foo/sa/default;Hash=a82702bc8a5e40ce9082cf93640503cf17bc211167b4eef0f0099a3eca58e652;Subject="";URI=spiffe://cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account'
+    'x-jwt-payload', 'eyJodHRwczovL2Zvby5jb20vZ3JvdXBzIjoiYWRtaW4gc3VwZXJ1c2VyIGRiLWFkbWluIiwiaXNzIjoiaHR0cHM6Ly9sZW9uc2VuZy5hdS5hdXRoMC5jb20vIiwic3ViIjoiUVdQand2bVZUTFZKaVFlamNQSmltMENLUjNweHRnZDNAY2xpZW50cyIsImF1ZCI6ImlzdGlvLWp3dC10ZXN0IiwiaWF0IjoxNjQ1ODc4MTQ1LCJleHAiOjE2NDU5NjQ1NDUsImF6cCI6IlFXUGp3dm1WVExWSmlRZWpjUEppbTBDS1IzcHh0Z2QzIiwic2NvcGUiOiJyZWFkOmRhdGFiYXNlIHdyaXRlOmRhdGFiYXNlIGV4dHJhIiwiZ3R5IjoiY2xpZW50LWNyZWRlbnRpYWxzIn0'
+    , dynamicMetadata: filter_metadata {
+      key: "envoy.filters.http.jwt_authn"
+      value {
+        fields {
+          key: "https://leonseng.au.auth0.com/"
+          value {
+            struct_value {
+              fields {
+                key: "aud"
+                value {
+                  string_value: "istio-jwt-test"
+                }
+              }
+              fields {
+                key: "azp"
+                value {
+                  string_value: "QWPjwvmVTLVJiQejcPJim0CKR3pxtgd3"
+                }
+              }
+              fields {
+                key: "exp"
+                value {
+                  number_value: 1645964545
+                }
+              }
+              fields {
+                key: "gty"
+                value {
+                  string_value: "client-credentials"
+                }
+              }
+              fields {
+                key: "https://foo.com/groups"
+                value {
+                  string_value: "admin superuser db-admin"
+                }
+              }
+              fields {
+                key: "iat"
+                value {
+                  number_value: 1645878145
+                }
+              }
+              fields {
+                key: "iss"
+                value {
+                  string_value: "https://leonseng.au.auth0.com/"
+                }
+              }
+              fields {
+                key: "scope"
+                value {
+                  string_value: "read:database write:database extra"
+                }
+              }
+              fields {
+                key: "sub"
+                value {
+                  string_value: "QWPjwvmVTLVJiQejcPJim0CKR3pxtgd3@clients"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    filter_metadata {
+      key: "istio_authn"
+      value {
+        fields {
+          key: "request.auth.audiences"
+          value {
+            string_value: "istio-jwt-test"
+          }
+        }
+        fields {
+          key: "request.auth.claims"
+          value {
+            struct_value {
+              fields {
+                key: "aud"
+                value {
+                  list_value {
+                    values {
+                      string_value: "istio-jwt-test"
+                    }
+                  }
+                }
+              }
+              fields {
+                key: "azp"
+                value {
+                  list_value {
+                    values {
+                      string_value: "QWPjwvmVTLVJiQejcPJim0CKR3pxtgd3"
+                    }
+                  }
+                }
+              }
+              fields {
+                key: "gty"
+                value {
+                  list_value {
+                    values {
+                      string_value: "client-credentials"
+                    }
+                  }
+                }
+              }
+              fields {
+                key: "https://foo.com/groups"
+                value {
+                  list_value {
+                    values {
+                      string_value: "admin"
+                    }
+                    values {
+                      string_value: "superuser"
+                    }
+                    values {
+                      string_value: "db-admin"
+                    }
+                  }
+                }
+              }
+              fields {
+                key: "iss"
+                value {
+                  list_value {
+                    values {
+                      string_value: "https://leonseng.au.auth0.com/"
+                    }
+                  }
+                }
+              }
+              fields {
+                key: "scope"
+                value {
+                  list_value {
+                    values {
+                      string_value: "read:database"
+                    }
+                    values {
+                      string_value: "write:database"
+                    }
+                    values {
+                      string_value: "extra"
+                    }
+                  }
+                }
+              }
+              fields {
+                key: "sub"
+                value {
+                  list_value {
+                    values {
+                      string_value: "QWPjwvmVTLVJiQejcPJim0CKR3pxtgd3@clients"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        fields {
+          key: "request.auth.presenter"
+          value {
+            string_value: "QWPjwvmVTLVJiQejcPJim0CKR3pxtgd3"
+          }
+        }
+        fields {
+          key: "request.auth.principal"
+          value {
+            string_value: "https://leonseng.au.auth0.com//QWPjwvmVTLVJiQejcPJim0CKR3pxtgd3@clients"
+          }
+        }
+        fields {
+          key: "request.auth.raw_claims"
+          value {
+            string_value: "{\"https://foo.com/groups\":\"admin superuser db-admin\",\"exp\":1645964545,\"scope\":\"read:database write:database extra\",\"sub\":\"QWPjwvmVTLVJiQejcPJim0CKR3pxtgd3@clients\",\"iat\":1645878145,\"azp\":\"QWPjwvmVTLVJiQejcPJim0CKR3pxtgd3\",\"aud\":\"istio-jwt-test\",\"iss\":\"https://leonseng.au.auth0.com/\",\"gty\":\"client-credentials\"}"
+          }
+        }
+        fields {
+          key: "source.namespace"
+          value {
+            string_value: "istio-system"
+          }
+        }
+        fields {
+          key: "source.principal"
+          value {
+            string_value: "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"
+          }
+        }
+        fields {
+          key: "source.user"
+          value {
+            string_value: "cluster.local/ns/istio-system/sa/istio-ingressgateway-service-account"
+          }
+        }
+      }
+    }
+
+    2022-02-26T12:22:59.368930Z     debug   envoy rbac      enforced allowed, matched policy ns[foo]-policy[httpbin-authz-policy]-rule[0]
+    2022-02-26T12:22:59.372521Z     debug   envoy jwt       Called Filter : onDestroy
     ```
