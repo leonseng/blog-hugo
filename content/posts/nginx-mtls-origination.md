@@ -18,7 +18,7 @@ location /upstream {
 }
 ```
 
-Looks simple enough, but alas, they didn't work out of the box for me... This is a post recounting my troubleshooting efforts and learning experience on this matter.
+Looks simple enough, but alas, they didn't work out of the box for me... This is a post recounting my troubleshooting efforts and some NGINX knobs I learned along the way.
 
 **tl;dr**:
 
