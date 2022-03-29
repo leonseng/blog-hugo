@@ -1,5 +1,5 @@
 ---
-title: "NGINX: mTLS Origination"
+title: "NGINX mTLS Origination"
 date: 2022-03-29T21:46:13+11:00
 draft: false
 tags: ['nginx', 'mtls']
