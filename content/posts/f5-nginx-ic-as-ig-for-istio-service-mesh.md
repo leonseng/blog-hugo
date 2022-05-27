@@ -2,7 +2,7 @@
 title: "F5 Nginx Ingress Controller as Ingress Gateway for Istio Service Mesh"
 date: 2022-05-24T15:21:10+10:00
 draft: false
-tags: ['nginx', 'kic', 'istio', 'kubernetes']
+tags: ['nginx', 'f5', 'ingress', 'istio', 'kubernetes']
 categories: ['tech']
 ---
 
