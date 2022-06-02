@@ -19,9 +19,11 @@ In this post, let's go through two methods of integrating **NGINX IC** with Isti
 
 # NGINX IC with Istio sidecar
 
-The first method injects an Istio sidecar into the **NGINX IC** deployment, offloading the mTLS exchange and certificate rotation to Istio. Per [official documentation](https://istio.io/latest/docs/setup/additional-setup/sidecar-injection/#controlling-the-injection-policy), this can be done by labelling the **NGINX IC** pods with `sidecar.istio.io/inject=true`.
+The first method injects an Istio sidecar into the **NGINX IC** deployment, offloading the mTLS exchange and certificate rotation to Istio.
 
-By default, the Istio sidecar will intercept all inbound and outbound traffic from the **NGINX IC** container. However, as an ingress gateway handling inbound traffic, it is preferable to not have Istio proxy intercepting and modifying inbound traffic. This can be configured by adding the `traffic.sidecar.istio.io/excludeInboundPorts` annotation to the **NGINX IC** pods. The manifest below shows a configuration where inbound traffic destined for port `80` and `443` will bypass the Istio sidecar and reach the **NGINX IC** directly instead.
+![NGINX Ingress Controller with Istio sidecar](/images/f5-nginx-ic-as-ig-for-istio-service-mesh/nginx-istio-with-sidecar.png)
+
+Per [official documentation](https://istio.io/latest/docs/setup/additional-setup/sidecar-injection/#controlling-the-injection-policy), this can be done by labelling the **NGINX IC** pods with `sidecar.istio.io/inject=true`. By default, the Istio sidecar will intercept all inbound and outbound traffic from the **NGINX IC** container. However, as an ingress gateway handling inbound traffic, it is preferable to not have Istio proxy intercepting and modifying inbound traffic. This can be configured by adding the `traffic.sidecar.istio.io/excludeInboundPorts` annotation to the **NGINX IC** pods. The manifest below shows a configuration where inbound traffic destined for port `80` and `443` will bypass the Istio sidecar and reach the **NGINX IC** directly instead.
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -253,7 +255,11 @@ The log entries from the following sources also shows the traffic flow from **NG
 
 # NGINX IC with client cert issued by Istio CA
 
-Another approach of integrating **NGINX IC** into Istio service mesh is to have **NGINX IC** perform the mTLS certificate exchange itself. This method does not require a sidecar for **NGINX IC**, instead we directly provide **NGINX IC** with a client TLS key pair that is trusted by Istio service mesh, to establish the connection to applications in the service mesh. The deployment of **NGINX IC** without sidecar is identical to the previous section, except without the Istio `sidecar.istio.io/inject` label and `traffic.sidecar.istio.io/excludeInboundPorts` annotation.
+Another approach of integrating **NGINX IC** into Istio service mesh is to have **NGINX IC** perform the mTLS certificate exchange itself. This method does not require a sidecar for **NGINX IC**, instead we directly provide **NGINX IC** with a client TLS key pair that is trusted by Istio service mesh, to establish the connection to applications in the service mesh.
+
+![NGINX Ingress Controller without Istio sidecar](/images/f5-nginx-ic-as-ig-for-istio-service-mesh/nginx-istio-without-sidecar.png)
+
+The deployment of **NGINX IC** without sidecar is identical to the previous section, except without the Istio `sidecar.istio.io/inject` label and `traffic.sidecar.istio.io/excludeInboundPorts` annotation.
 
 For **NGINX IC** to perform mTLS certificate exchange towards the backend, we need to create an [EgressMTLS](https://docs.nginx.com/nginx-ingress-controller/configuration/policy-resource/#egressmtls) policy, which references the client TLS key pair and the CA certificate, and [attach it to the VirtualServer](https://docs.nginx.com/nginx-ingress-controller/configuration/virtualserver-and-virtualserverroute-resources/#virtualserverpolicy). The creation of the client TLS key pair for use in an Istio service mesh has been covered in an earlier post - [Istio Authorization With Client Certificates](../istio-authorization-with-client-certificates/#client-certificate-setup). They are then stored in two Kubernetes secrets:
 ```yaml
