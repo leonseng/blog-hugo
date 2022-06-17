@@ -8,7 +8,8 @@ categories: ['tech']
 
 ---
 
-> Disclaimer:
+> Note:
+>
 > The NGINX Ingress Controller referenced in this post is the [F5 NGINX Ingress Controller](https://www.nginx.com/products/nginx-ingress-controller/), not [the one by the Kubernetes community](https://kubernetes.github.io/ingress-nginx/).
 
 Using F5 NGINX Ingress Controller (henceforth known as **NGINX IC** for brevity) as ingress to a Kubernetes cluster secured by Istio service mesh, with strict mTLS policy configured, presents a hurdle - how does **NGINX IC** participate in the mTLS certificate exchange with services/applications in the Istio service mesh?
