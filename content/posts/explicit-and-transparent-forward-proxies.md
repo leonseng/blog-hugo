@@ -14,7 +14,7 @@ Forward proxies, by definition, initiates requests to servers on behalf of the c
 1. performing content filtering, and
 1. caching frequently accessed content (though this is less irrelevant in the age of dynamically generated sites and high speed Internet access)
 
-![Banner](/images/explicit-and-transparent-forward-proxies/banner.png)
+<p style="text-align:center;"><img src="/images/explicit-and-transparent-forward-proxies/banner.png" width="56%"></p>
 
 Forward proxies can be set up in two different modes - [explicit](#explicit-mode) and [transparent](#transparent-mode) mode. In this post, I will be explaining both modes and how they handle HTTP and HTTPS traffic.
 

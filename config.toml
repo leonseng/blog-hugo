@@ -9,6 +9,9 @@ theme = "cactus"
     ordered = false
     startLevel = 1
 
+  [markup.goldmark.renderer]
+    unsafe= true
+
 [menu]
   [[menu.main]]
     name = "Home"
