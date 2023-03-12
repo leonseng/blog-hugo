@@ -64,7 +64,7 @@ As the proxy likely does not hold the original server's TLS private key, it has 
 
 ## Proxy listening on HTTPS port
 
-The above examples have the proxy listening on a HTTP endpoint `http://proxy.example:3128`. This means that initial setup flows between the client and the proxy, such as the `HTTP CONNECT` message, is in clear text, potentially leaking sensitive information to others on the same network. To prevent that, the traffic between client and proxy can be encrypted via TLS with appropriate configuration on both the client and the proxy.
+The above examples have the proxy listening on a HTTP endpoint `http://proxy.example:3128`. This means that initial setup flows between the client and the proxy, such as the `HTTP CONNECT` message, is in clear text, potentially leaking sensitive information to others on the same network. To prevent that, the traffic between client and proxy can be encrypted via TLS with appropriate configuration on both the client and the proxy, as shown below where either `HTTP_PROXY` or `HTTPS_PROXY` variables are set to `https://proxy.example:3128`:
 
 ![Explicit Encrypted](/images/explicit-and-transparent-forward-proxies/explicit-encrypted.png)
 
