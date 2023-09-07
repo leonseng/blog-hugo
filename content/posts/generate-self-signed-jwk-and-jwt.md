@@ -6,11 +6,45 @@ tags: ['auth', 'jwt']
 categories: ['tech']
 ---
 
-When testing JSON Web Token-based authentication and authorization, relying on third party identity/authorization servers introduces an unnecessary dependency and a potential point of failure, especially for automated tests or continuous integration (CI) pipelines. Instead, below are instructions on generating self-signed
+When testing JSON Web Token-based authentication and authorization, relying on third party identity/authorization servers introduces an unnecessary dependency and a potential point of failure, especially for automated tests or continuous integration (CI) pipelines.
+
+Instead, we can speed up the process by generating the data ourselves with the instructions below, creating the following:
 - [**JSON Web Keys (JWK)**/**JSON Web Key Sets (JWKS)**](#json-web-key--key-set), and
 - [**JSON Web Tokens (JWT)**](#json-web-token)
 
-to speed up the process.
+The following command-line tools will be required:
+- [openssl](https://www.openssl.org/)
+- [jwker](https://github.com/jphastings/jwker/releases)
+- [jq](https://jqlang.github.io/jq/)
+- [jwt command-line tool](https://pkg.go.dev/github.com/golang-jwt/jwt/cmd/jwt)
+
+# tl;dr
+
+```
+# Create RSA key pair
+openssl genrsa -out private.key 2048
+openssl rsa -in private.key -pubout -out public.key
+
+# Generate JWK and store it in jwk.json
+jwker public.key | jq -S ". += {\"kid\":\"$RANDOM\"}" | tee jwk.json
+
+# Generate JWKS and store it in jwks.json
+cat jwk.json | jq '{"keys": [.]}' | tee jwks.json
+
+# Generate JWT and store it in jwt.json
+# Add/remove headers and claims as necessary
+jwt -key private.key -alg RS256 -sign + \
+  -header kid=17334 \
+  -claim iss=leonseng.com \
+  -claim sub=me \
+  -claim aud=you \
+  -claim iat=$(date +%s) \
+  -claim nbf=$(date +%s) \
+  -claim exp=$(date -d "+24hours" +%s) \
+  -claim jti=$RANDOM \
+  -claim custom=foobar \
+  | tee jwt.json
+```
 
 # JSON Web Key & JSON Web Key Set
 
@@ -54,7 +88,7 @@ Authorization: Bearer eyJhbGciOiJSUzI1NiI...
 ```
 An application or layer 7 proxy then parses the JWT to authenticate the client - ensuring it is signed by a trusted authority, as well as authorizing the client by checking the claim values. As the JWT is cryptograhically signed, any attempts by the client to tamper with the JWT claims will invalidate the signature.
 
-To generate a JWT, use the [jwt command-line tool](https://pkg.go.dev/github.com/golang-jwt/jwt/cmd/jwt), referencing the private key created earlier, as well as providing a series of headers and claims to be included:
+To generate a JWT, use the [jwt command-line tool](https://pkg.go.dev/github.com/golang-jwt/jwt/cmd/jwt), referencing the private key created earlier. Headers and claims can be added as required via the `-header` and `-claim` options.
 ```
 jwt -key private.key -alg RS256 -sign + \
   -header kid=17334 \
@@ -64,7 +98,7 @@ jwt -key private.key -alg RS256 -sign + \
   -claim iat=$(date +%s) \
   -claim nbf=$(date +%s) \
   -claim exp=$(date -d "+24hours" +%s) \
-  -claim jti=$(uuidgen) \
+  -claim jti=$RANDOM \
   -claim custom=foobar \
   | tee jwt.json
 ```
