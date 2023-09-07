@@ -1,12 +1,12 @@
 ---
-title: "Self-Signed JSON Web Keys And JSON Web Tokens"
+title: "Generate Self-Signed JSON Web Keys And JSON Web Tokens"
 date: 2023-09-07T14:17:35+10:00
 draft: false
 tags: ['auth', 'jwt']
 categories: ['tech']
 ---
 
-When testing JSON Web Token-based authentication and authorization, relying on third party identity/authorization servers introduces an unnecessary dependency and a potential point of failure, especially for automated tests or continuous integration (CI) pipelines. Instead, below are instructions on generating mocks of
+When testing JSON Web Token-based authentication and authorization, relying on third party identity/authorization servers introduces an unnecessary dependency and a potential point of failure, especially for automated tests or continuous integration (CI) pipelines. Instead, below are instructions on generating self-signed
 - [**JSON Web Keys (JWK)**/**JSON Web Key Sets (JWKS)**](#json-web-key--key-set), and
 - [**JSON Web Tokens (JWT)**](#json-web-token)
 
